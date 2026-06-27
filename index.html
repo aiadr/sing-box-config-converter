@@ -1,0 +1,590 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>VLESS to sing-box</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --ink: #16202a;
+        --muted: #627084;
+        --line: #d7dee8;
+        --accent: #126e82;
+        --accent-strong: #0a5365;
+        --accent-soft: #e3f3f6;
+        --danger: #a8333d;
+        --ok: #20735c;
+        --shadow: 0 18px 45px rgba(24, 35, 48, 0.11);
+        --radius: 8px;
+        font-family:
+          Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          linear-gradient(180deg, rgba(18, 110, 130, 0.06), transparent 260px),
+          var(--bg);
+        color: var(--ink);
+      }
+
+      button,
+      textarea,
+      input {
+        font: inherit;
+      }
+
+      .app {
+        width: min(1360px, calc(100vw - 32px));
+        margin: 0 auto;
+        padding: 24px 0;
+      }
+
+      .topbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(24px, 3vw, 36px);
+        line-height: 1.05;
+        letter-spacing: 0;
+      }
+
+      .mode {
+        display: inline-grid;
+        grid-template-columns: 1fr 1fr;
+        min-width: min(100%, 430px);
+        border: 1px solid var(--line);
+        background: var(--panel);
+        border-radius: var(--radius);
+        padding: 4px;
+        box-shadow: 0 8px 26px rgba(24, 35, 48, 0.08);
+      }
+
+      .mode button,
+      .icon-button,
+      .primary,
+      .secondary {
+        border: 0;
+        cursor: pointer;
+      }
+
+      .mode button {
+        min-height: 38px;
+        border-radius: 6px;
+        background: transparent;
+        color: var(--muted);
+        font-weight: 650;
+      }
+
+      .mode button.active {
+        color: #fff;
+        background: var(--accent);
+      }
+
+      .workspace {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px minmax(0, 1fr);
+        gap: 14px;
+        align-items: stretch;
+      }
+
+      .pane,
+      .settings {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+      }
+
+      .pane {
+        min-height: 640px;
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        overflow: hidden;
+      }
+
+      .pane-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: 58px;
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .pane-title {
+        display: flex;
+        align-items: baseline;
+        gap: 10px;
+        min-width: 0;
+      }
+
+      .pane-title strong {
+        font-size: 15px;
+      }
+
+      .counter {
+        color: var(--muted);
+        font-size: 13px;
+        white-space: nowrap;
+      }
+
+      textarea {
+        width: 100%;
+        height: 100%;
+        min-height: 480px;
+        resize: none;
+        border: 0;
+        padding: 16px;
+        outline: none;
+        color: #182432;
+        background: #fbfcfe;
+        font-family:
+          "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+        font-size: 13px;
+        line-height: 1.55;
+      }
+
+      textarea[readonly] {
+        background: #f9fbfd;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 12px 14px;
+        border-top: 1px solid var(--line);
+      }
+
+      .primary,
+      .secondary,
+      .icon-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 38px;
+        border-radius: 6px;
+        font-weight: 700;
+      }
+
+      .primary {
+        padding: 0 15px;
+        color: #fff;
+        background: var(--accent);
+      }
+
+      .primary:hover {
+        background: var(--accent-strong);
+      }
+
+      .secondary,
+      .icon-button {
+        border: 1px solid var(--line);
+        background: #fff;
+        color: var(--ink);
+      }
+
+      .secondary {
+        padding: 0 12px;
+      }
+
+      .icon-button {
+        width: 38px;
+        flex: 0 0 38px;
+      }
+
+      .settings {
+        min-height: 640px;
+        padding: 16px;
+      }
+
+      .settings h2 {
+        margin: 0 0 14px;
+        font-size: 16px;
+        letter-spacing: 0;
+      }
+
+      .field {
+        display: grid;
+        gap: 7px;
+        margin-bottom: 14px;
+      }
+
+      label {
+        color: var(--muted);
+        font-size: 13px;
+        font-weight: 650;
+      }
+
+      .checkbox {
+        display: grid;
+        grid-template-columns: 20px 1fr;
+        gap: 8px;
+        align-items: start;
+        margin-bottom: 13px;
+      }
+
+      .checkbox input {
+        width: 18px;
+        height: 18px;
+        margin: 1px 0 0;
+        accent-color: var(--accent);
+      }
+
+      input[type="text"],
+      input[type="number"] {
+        width: 100%;
+        min-height: 38px;
+        border: 1px solid var(--line);
+        border-radius: 6px;
+        padding: 8px 10px;
+        color: var(--ink);
+        background: #fff;
+        outline-color: var(--accent);
+      }
+
+      .status {
+        min-height: 42px;
+        margin-top: 16px;
+        padding: 11px 12px;
+        border-radius: 6px;
+        border: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 13px;
+        line-height: 1.35;
+        background: #fbfcfe;
+      }
+
+      .status.ok {
+        color: var(--ok);
+        border-color: rgba(32, 115, 92, 0.25);
+        background: #edf8f4;
+      }
+
+      .status.error {
+        color: var(--danger);
+        border-color: rgba(168, 51, 61, 0.25);
+        background: #fff1f2;
+      }
+
+      .hidden {
+        display: none !important;
+      }
+
+      @media (max-width: 1080px) {
+        .workspace {
+          grid-template-columns: 1fr;
+        }
+
+        .settings,
+        .pane {
+          min-height: auto;
+        }
+
+        textarea {
+          min-height: 360px;
+        }
+      }
+
+      @media (max-width: 720px) {
+        .app {
+          width: min(100vw - 20px, 1360px);
+          padding: 14px 0;
+        }
+
+        .topbar {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .mode {
+          min-width: 0;
+          width: 100%;
+        }
+
+        .pane-head,
+        .actions {
+          padding: 10px;
+        }
+
+        .actions .primary,
+        .actions .secondary {
+          flex: 1 1 130px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <header class="topbar">
+        <h1>VLESS to sing-box</h1>
+        <nav class="mode" aria-label="Режим">
+          <button id="toJsonMode" class="active" type="button">VLESS → JSON</button>
+          <button id="toLinksMode" type="button">JSON → VLESS</button>
+        </nav>
+      </header>
+
+      <section class="workspace">
+        <article class="pane">
+          <div class="pane-head">
+            <div class="pane-title">
+              <strong id="inputTitle">VLESS-ссылки</strong>
+              <span id="inputCount" class="counter">0</span>
+            </div>
+            <button id="loadSample" class="icon-button" type="button" title="Загрузить пример">?</button>
+          </div>
+          <textarea id="input" spellcheck="false" placeholder="vless://..."></textarea>
+          <div class="actions">
+            <button id="convert" class="primary" type="button">Конвертировать</button>
+            <button id="clear" class="secondary" type="button">Очистить</button>
+          </div>
+        </article>
+
+        <aside class="settings">
+          <h2>Параметры</h2>
+          <div id="jsonSettings">
+            <label class="checkbox">
+              <input id="fullConfig" type="checkbox" checked />
+              <span>Полный конфиг</span>
+            </label>
+            <label class="checkbox">
+              <input id="useUrlTest" type="checkbox" checked />
+              <span>urltest для нескольких ссылок</span>
+            </label>
+            <div class="field">
+              <label for="selectorTag">Тег urltest</label>
+              <input id="selectorTag" type="text" value="auto" />
+            </div>
+            <div class="field">
+              <label for="testUrl">URL проверки</label>
+              <input id="testUrl" type="text" value="https://www.gstatic.com/generate_204" />
+            </div>
+            <div class="field">
+              <label for="interval">Интервал</label>
+              <input id="interval" type="text" value="3m" />
+            </div>
+            <div class="field">
+              <label for="tolerance">Tolerance</label>
+              <input id="tolerance" type="number" min="0" step="1" value="50" />
+            </div>
+          </div>
+          <div id="linksSettings" class="hidden">
+            <label class="checkbox">
+              <input id="keepTags" type="checkbox" checked />
+              <span>Теги в названии ссылки</span>
+            </label>
+          </div>
+          <div id="status" class="status">Готово</div>
+        </aside>
+
+        <article class="pane">
+          <div class="pane-head">
+            <div class="pane-title">
+              <strong id="outputTitle">sing-box JSON</strong>
+              <span id="outputCount" class="counter">0</span>
+            </div>
+            <button id="copy" class="icon-button" type="button" title="Копировать">⧉</button>
+          </div>
+          <textarea id="output" readonly spellcheck="false"></textarea>
+          <div class="actions">
+            <button id="download" class="secondary" type="button">Скачать</button>
+            <button id="swap" class="secondary" type="button">В обратный режим</button>
+          </div>
+        </article>
+      </section>
+    </main>
+
+    <script src="./converter.js?v=2026-06-28-3"></script>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const state = { mode: "toJson" };
+
+      const samples = {
+        toJson:
+          "vless://11111111-1111-4111-8111-111111111111@example.com:443?encryption=none&security=reality&sni=example.com&fp=chrome&pbk=PUBLIC_KEY&sid=abcd&spx=%2F&type=tcp&flow=xtls-rprx-vision#Reality%20TCP\n" +
+          "vless://22222222-2222-4222-8222-222222222222@cdn.example.net:443?encryption=none&security=tls&sni=cdn.example.net&type=ws&host=cdn.example.net&path=%2Fws#TLS%20WS",
+        toLinks: JSON.stringify(
+          {
+            outbounds: [
+              {
+                type: "urltest",
+                tag: "auto",
+                outbounds: ["Reality-TCP", "TLS-WS"],
+                url: "https://www.gstatic.com/generate_204",
+                interval: "3m",
+                tolerance: 50,
+              },
+              {
+                type: "vless",
+                tag: "Reality-TCP",
+                server: "example.com",
+                server_port: 443,
+                uuid: "11111111-1111-4111-8111-111111111111",
+                flow: "xtls-rprx-vision",
+                tls: {
+                  enabled: true,
+                  server_name: "example.com",
+                  utls: { enabled: true, fingerprint: "chrome" },
+                  reality: {
+                    enabled: true,
+                    public_key: "PUBLIC_KEY",
+                    short_id: "abcd",
+                    spider_x: "/",
+                  },
+                },
+              },
+              {
+                type: "vless",
+                tag: "TLS-WS",
+                server: "cdn.example.net",
+                server_port: 443,
+                uuid: "22222222-2222-4222-8222-222222222222",
+                tls: { enabled: true, server_name: "cdn.example.net" },
+                transport: {
+                  type: "ws",
+                  path: "/ws",
+                  headers: { Host: "cdn.example.net" },
+                },
+              },
+            ],
+          },
+          null,
+          2
+        ),
+      };
+
+      function settings() {
+        return {
+          fullConfig: $("fullConfig").checked,
+          useUrlTest: $("useUrlTest").checked,
+          selectorTag: $("selectorTag").value.trim() || "auto",
+          testUrl: $("testUrl").value.trim(),
+          interval: $("interval").value.trim(),
+          tolerance: Number($("tolerance").value),
+        };
+      }
+
+      function setMode(mode) {
+        state.mode = mode;
+        $("toJsonMode").classList.toggle("active", mode === "toJson");
+        $("toLinksMode").classList.toggle("active", mode === "toLinks");
+        $("jsonSettings").classList.toggle("hidden", mode !== "toJson");
+        $("linksSettings").classList.toggle("hidden", mode !== "toLinks");
+        $("inputTitle").textContent = mode === "toJson" ? "VLESS-ссылки" : "sing-box JSON";
+        $("outputTitle").textContent = mode === "toJson" ? "sing-box JSON" : "VLESS-ссылки";
+        $("input").placeholder = mode === "toJson" ? "vless://..." : "{ ... }";
+        $("output").value = "";
+        updateCounts();
+        setStatus("Готово");
+      }
+
+      function convert() {
+        try {
+          if (state.mode === "toJson") {
+            const config = VlessSingBoxConverter.buildSingBoxConfig($("input").value, settings());
+            $("output").value = VlessSingBoxConverter.formatJson(config);
+            const count = VlessSingBoxConverter.parseVlessLinks($("input").value).length;
+            setStatus(`Ссылок: ${count}`, "ok");
+          } else {
+            const links = VlessSingBoxConverter.singBoxToVlessLinks($("input").value);
+            $("output").value = links
+              .map((link) => ($("keepTags").checked ? link : link.replace(/#.*$/, "")))
+              .join("\n");
+            setStatus(`Ссылок: ${links.length}`, "ok");
+          }
+        } catch (error) {
+          $("output").value = "";
+          setStatus(error.message, "error");
+        }
+        updateCounts();
+      }
+
+      function updateCounts() {
+        const inputText = $("input").value.trim();
+        const outputText = $("output").value.trim();
+        $("inputCount").textContent = inputText
+          ? state.mode === "toJson"
+            ? inputText.split(/\r?\n/).filter(Boolean).length
+            : `${inputText.length} симв.`
+          : "0";
+        $("outputCount").textContent = outputText
+          ? state.mode === "toJson"
+            ? `${outputText.length} симв.`
+            : outputText.split(/\r?\n/).filter(Boolean).length
+          : "0";
+      }
+
+      function setStatus(text, type) {
+        $("status").textContent = text;
+        $("status").className = `status ${type || ""}`.trim();
+      }
+
+      async function copyOutput() {
+        if (!$("output").value) return;
+        try {
+          await navigator.clipboard.writeText($("output").value);
+          setStatus("Скопировано", "ok");
+        } catch (_) {
+          $("output").select();
+          document.execCommand("copy");
+          setStatus("Скопировано", "ok");
+        }
+      }
+
+      function downloadOutput() {
+        if (!$("output").value) return;
+        const mime = state.mode === "toJson" ? "application/json" : "text/plain";
+        const blob = new Blob([$("output").value], { type: `${mime};charset=utf-8` });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = state.mode === "toJson" ? "sing-box-config.json" : "vless-links.txt";
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+
+      $("toJsonMode").addEventListener("click", () => setMode("toJson"));
+      $("toLinksMode").addEventListener("click", () => setMode("toLinks"));
+      $("convert").addEventListener("click", convert);
+      $("copy").addEventListener("click", copyOutput);
+      $("download").addEventListener("click", downloadOutput);
+      $("clear").addEventListener("click", () => {
+        $("input").value = "";
+        $("output").value = "";
+        setStatus("Готово");
+        updateCounts();
+      });
+      $("loadSample").addEventListener("click", () => {
+        $("input").value = samples[state.mode];
+        convert();
+      });
+      $("swap").addEventListener("click", () => {
+        if (!$("output").value) return;
+        $("input").value = $("output").value;
+        $("output").value = "";
+        setMode(state.mode === "toJson" ? "toLinks" : "toJson");
+        $("input").value = $("input").value;
+        convert();
+      });
+      $("input").addEventListener("input", updateCounts);
+
+      setMode("toJson");
+    </script>
+  </body>
+</html>
