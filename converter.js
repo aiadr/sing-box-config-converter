@@ -156,11 +156,13 @@
       }
 
       if (security === "reality") {
+        if (!tls.utls) {
+          tls.utls = { enabled: true, fingerprint: "chrome" };
+        }
         tls.reality = {
           enabled: true,
           public_key: firstParam(params, ["pbk", "publicKey", "public_key"]),
           short_id: firstParam(params, ["sid", "shortId", "short_id"]),
-          spider_x: firstParam(params, ["spx", "spiderX", "spider_x"]),
         };
       }
 
@@ -280,8 +282,14 @@
       dns: {
         servers: [
           {
+            type: "udp",
             tag: "dns-remote",
-            address: "8.8.8.8",
+            server: "8.8.8.8",
+            detour: finalTag,
+          },
+          {
+            type: "local",
+            tag: "dns-local",
           },
         ],
         final: "dns-remote",
@@ -308,6 +316,7 @@
           },
         ],
         auto_detect_interface: true,
+        default_domain_resolver: "dns-local",
         final: finalTag,
       },
     };
